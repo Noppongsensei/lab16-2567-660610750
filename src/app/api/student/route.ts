@@ -31,6 +31,10 @@ export const GET = async (request: NextRequest) => {
   }
 
   //filter by student id here
+  if (studentId !== null) {
+    filtered = filtered.filter((std) => std.studentId === studentId);
+  }
+  
 
   return NextResponse.json({ ok: true, students: filtered });
 };
@@ -97,19 +101,40 @@ export const PUT = async (request: NextRequest) => {
 };
 
 export const DELETE = async (request: NextRequest) => {
-  //get body and validate it
+  // Parse the body to get the studentId
+  const  body  = await request.json();
 
-  //check if student id exist
+  // Validate that studentId is provided
+  if (!body) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Student ID must contain 9 caracters",
+      },
+      { status: 400 }
+    );
+  }
 
-  //perform removing student from DB. You can choose from 2 choices
-  //1. use array filter method
-  // DB.students = DB.students.filter(...);
+  // Check if the student exists in the DB
+  const foundIndex = DB.students.findIndex(
+    (std) => std.studentId === body.studentId
+  );
+  if (foundIndex === -1) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Student ID does not exist",
+      },
+      { status: 404 }
+    );
+  }
 
-  //or 2. use splice array method
-  // DB.students.splice(...)
-
+  // Remove the student from the DB
+  // Option 1: Using `filter` method (non-destructive, returns a new array)
+  DB.students = DB.students.filter((student) => student.studentId !== body.studentId);
   return NextResponse.json({
     ok: true,
-    message: `Student Id xxx has been deleted`,
+    message: `Student ID ${body.studentId} has been deleted`,
   });
 };
+
